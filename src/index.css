@@ -39,6 +39,10 @@ body {
 	margin: 0;
 }
 
+a {
+	text-decoration: underline;
+}
+
 body {
 	position: absolute;
 	left: 0;
