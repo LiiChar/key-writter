@@ -31,13 +31,13 @@ const initialData: InitialData = {
 		wpsStatsCount: 10,
 		keyboardVisible: true,
 	},
-	setConfigPropery: (propery, value): void => {
+	setConfigPropery: (_propery, _value): void => {
 		throw new Error('Function not implemented.');
 	},
 	setDefaltValue: (): void => {
 		throw new Error('Function not implemented.');
 	},
-	setConfig: function (value: SetStateAction<Config>): void {
+	setConfig: function (_value: SetStateAction<Config>): void {
 		throw new Error('Function not implemented.');
 	},
 };

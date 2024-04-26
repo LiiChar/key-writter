@@ -4,19 +4,17 @@ import classNames from 'classnames';
 import { WpsStats } from './WpsStats';
 import { useConfig } from '../../context/useConfig';
 import { Keyboard } from '../Keyboard/Keyboard';
-import { ConfigModal } from '../Modal/ConfigModal';
-import { Settings } from 'lucide-react';
 
 export const WordBoard = () => {
 	const [cursorPosition, setCursorPosition] = useState(0);
 	const [wpss, setWpss] = useState<number[]>([]);
-	const [countOneWps, setCount] = useState(0);
+	const [_, setCount] = useState(0);
 	const [wps, setWps] = useState(0);
 
 	// const [cursor, setCursor] = useState<{ position: number }>({});
 	const [input, setInput] = useState('');
 	const { text, setText, getRandomText, setStatus } = useCharArray();
-	const { config, setConfigPropery } = useConfig();
+	const { config } = useConfig();
 
 	const clearChar = () => {
 		if (config.errorStop) {
@@ -111,7 +109,7 @@ export const WordBoard = () => {
 		refInput.current.focus();
 	};
 
-	const colorSet = (char: Char, pos: number) => {
+	const colorSet = (char: Char) => {
 		if (char.status == 'error') {
 			return 'bg-accent';
 		}
@@ -134,7 +132,7 @@ export const WordBoard = () => {
 						key={i}
 						className={classNames(
 							`	pb-[1px]`,
-							colorSet(char, i),
+							colorSet(char),
 							char.char == ' ' && 'h-[25px] w-[8px]',
 							char.status == 'hide' && 'hidden'
 						)}

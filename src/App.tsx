@@ -1,5 +1,3 @@
-import { Keyboard } from './components/Keyboard/Keyboard';
-import { Header } from './components/Layout/Header';
 import { WordBoard } from './components/WordBoard/WordBoard';
 
 function App() {

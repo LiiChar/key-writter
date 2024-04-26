@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { ReactNode, memo, useEffect, useState } from 'react';
+import { ReactNode, memo, useEffect, useState } from 'react';
 
 type Key = { key: string[]; width?: number; name?: ReactNode };
 

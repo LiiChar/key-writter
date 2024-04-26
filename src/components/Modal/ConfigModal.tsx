@@ -1,11 +1,4 @@
-import {
-	ChangeEvent,
-	FC,
-	MouseEvent,
-	MouseEventHandler,
-	ReactNode,
-	useState,
-} from 'react';
+import { FC, MouseEvent, ReactNode, useState } from 'react';
 import { useConfig } from '../../context/useConfig';
 
 type Props = {
