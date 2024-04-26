@@ -4,12 +4,14 @@ import classNames from 'classnames';
 import { WpsStats } from './WpsStats';
 import { useConfig } from '../../context/useConfig';
 import { Keyboard } from '../Keyboard/Keyboard';
+import { getIsPressedCapsLock, getLanguage } from '../../lib/keyboard';
 
 export const WordBoard = () => {
 	const [cursorPosition, setCursorPosition] = useState(0);
 	const [wpss, setWpss] = useState<number[]>([]);
 	const [_, setCount] = useState(0);
 	const [wps, setWps] = useState(0);
+	const [info, setInfo] = useState<string[]>([]);
 
 	// const [cursor, setCursor] = useState<{ position: number }>({});
 	const [input, setInput] = useState('');
@@ -37,9 +39,25 @@ export const WordBoard = () => {
 			handleFocus();
 		});
 
-		document.body.addEventListener('keydown', e => {
+		document.body.addEventListener('keydown', (e: KeyboardEvent) => {
+			let b = e;
 			if (e.key == 'Backspace') {
 				clearChar();
+			}
+			setInfo(prev => {
+				prev[0] = getLanguage(e.key);
+				return prev;
+			});
+			if (getIsPressedCapsLock(e)) {
+				setInfo(prev => {
+					prev[1] = 'Caplock';
+					return prev;
+				});
+			} else {
+				setInfo(prev => {
+					prev[1] = '';
+					return prev;
+				});
 			}
 		});
 
@@ -149,8 +167,15 @@ export const WordBoard = () => {
 				/>
 			</div>
 
-			<div className='bg-secondary min-w-[29px] w-min flex justify-center items-center absolute top-0 translate-x-full right-0 p-1'>
-				{wps}
+			<div className='bg-secondary  w-min  absolute top-0 translate-x-full right-0 p-1'>
+				<div className='min-w-[29px] flex justify-center items-center'>
+					{wps}
+				</div>
+				<ul className='min-w-[29px] flex-col flex justify-center items-center'>
+					{info.map(inf => (
+						<li>{inf}</li>
+					))}
+				</ul>
 			</div>
 			{/* <div className=' h-min  w-min flex justify-center items-center absolute top-0 -translate-x-full left-0 pr-1'>
 				<ConfigModal>
