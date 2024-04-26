@@ -40,7 +40,6 @@ export const WordBoard = () => {
 		});
 
 		document.body.addEventListener('keydown', (e: KeyboardEvent) => {
-			let b = e;
 			if (e.key == 'Backspace') {
 				clearChar();
 			}
