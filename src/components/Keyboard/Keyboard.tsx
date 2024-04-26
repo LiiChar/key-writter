@@ -1,11 +1,11 @@
 import classNames from 'classnames';
 import { ReactNode, memo, useEffect, useState } from 'react';
 
-type Key = { key: string[]; width?: number; name?: ReactNode };
+type Key = { key: string[]; width?: number | string; name?: ReactNode };
 
 const keys: Key[][] = [
 	[
-		{ key: ['`', `ё`, '~'], width: 32 },
+		{ key: ['`', `ё`, '~'], width: 'px-[10px]' },
 		{ key: ['1', '!'] },
 		{ key: ['2', '@', '"'] },
 		{ key: ['3'] },
@@ -19,10 +19,10 @@ const keys: Key[][] = [
 		{ key: ['-'] },
 		{ key: ['-'] },
 		{ key: ['='] },
-		{ key: ['Backspace'], width: 46 },
+		{ key: ['Backspace'], width: 'px-[16px]' },
 	],
 	[
-		{ key: ['Tab'], width: 38 },
+		{ key: ['Tab'], width: 'px-[14px]' },
 		{ key: ['q'] },
 		{ key: ['w'] },
 		{ key: ['e'] },
@@ -38,7 +38,7 @@ const keys: Key[][] = [
 		{ key: ['\\'] },
 	],
 	[
-		{ key: ['CapsLock'], width: 34 },
+		{ key: ['CapsLock'], width: 'px-[2px]' },
 		{ key: ['a'] },
 		{ key: ['s'] },
 		{ key: ['d'] },
@@ -50,10 +50,10 @@ const keys: Key[][] = [
 		{ key: ['l'] },
 		{ key: [';'] },
 		{ key: ["'"] },
-		{ key: ['Enter'], width: 38 },
+		{ key: ['Enter'], width: 'px-[15px]' },
 	],
 	[
-		{ key: ['Shift'], width: 42 },
+		{ key: ['Shift'], width: 'px-[26px]' },
 		{ key: ['z'] },
 		{ key: ['x'] },
 		{ key: ['c'] },
@@ -67,8 +67,8 @@ const keys: Key[][] = [
 		{ key: ["'"] },
 	],
 	[
-		{ key: ['Control'], name: 'Ctrl', width: 32 },
-		{ key: ['Alt'], width: 32 },
+		{ key: ['Control'], name: 'Ctrl', width: 'px-[7px]' },
+		{ key: ['Alt'], width: 'px-[10px]' },
 		{ key: [' '], name: 'space' },
 	],
 ];
@@ -104,17 +104,14 @@ export const Keyboard = memo(() => {
 					{keyRow.map((k, i) => (
 						<div
 							className={classNames(
-								'h-key-size relative border-y-font  flex bg-accent justify-center min-w-min items-center ',
+								'h-key-size relative border-y-font  flex bg-accent justify-center items-center ',
 								key.includes(k.key[0].toLowerCase()) ||
 									(k.key[1] && key.includes(k.key[1].toLowerCase())) ||
 									(k.key[2] && key.includes(k.key[2].toLowerCase()))
 									? 'bg-primary border-b-[1px] scale-y-90 translate-y-[1px]'
 									: 'border-b-[3px]',
-								k.width ? '' : 'w-full'
+								k.width ? k.width : 'w-full'
 							)}
-							style={{
-								width: k.width + 'px',
-							}}
 							key={i}
 						>
 							{k.name ? k.name : k.key[0]}
