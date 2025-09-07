@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import { FC, HTMLAttributes, memo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type Props = {
 	className?: HTMLAttributes<HTMLDivElement>['className'];
@@ -19,48 +20,45 @@ export const WpsStats: FC<Props> = memo(
 		count = 20,
 		wpsVisible = false,
 	}) => {
-		const normilizeHeight = (wps: number, max: number, min: number = 0) => {
-			console.log(((wps - min) / (max - min)) * 100);
+		// Берём последние count значений
+		const values =
+			type === 'double'
+				? (() => {
+						const slice = wpss.slice(-Math.floor(count / 2));
+						return [...slice].reverse().concat(slice);
+				  })()
+				: wpss.slice(-count);
 
-			return (wps - min) / (max - min);
-		};
+		// Максимум для нормализации
+		const maxWps = Math.max(...values, 1);
 
-		const wss = (() => {
-			let res: number[] = wpss;
-
-			if (type == 'double') {
-				const array = [...res].slice(-count / 2);
-				res = [...[...array].reverse(), ...[...array]];
-			} else if ((type = 'default')) {
-				res = res.splice(0, count);
-			}
-
-			return res;
-		})();
+		const barWidth = `${100 / Math.max(values.length, 1)}%`;
 
 		return (
 			<div
 				className={classNames(
-					'overflow-auto rotate-180 flex w-full',
+					'flex items-end gap-[2px] overflow-hidden bg-gray-100 p-1',
 					className
 				)}
-				style={{
-					height: height + 'px',
-				}}
+				style={{ height }}
 			>
-				{wss.map((wps, i) => (
-					<div
-						key={i}
-						className='bg-secondary flex justify-center items-center w-full'
-						style={{
-							height: `${normilizeHeight(wps, height, 0) * 100}%`,
-						}}
-					>
-						{wpsVisible && (
-							<span className='text-xs rotate-180'>{wps != 0 && wps}</span>
-						)}
-					</div>
-				))}
+				<AnimatePresence>
+					{values.map((wps, i) => (
+						<motion.div
+							key={i}
+							className='bg-primary flex justify-center items-end'
+							style={{ width: barWidth }}
+							initial={{ height: 0 }}
+							animate={{ height: `${(wps / maxWps) * 100}%` }}
+							exit={{ height: 0 }}
+							transition={{ duration: 0.3 }}
+						>
+							{wpsVisible && (
+								<span className='text-xs text-white'>{wps || ''}</span>
+							)}
+						</motion.div>
+					))}
+				</AnimatePresence>
 			</div>
 		);
 	}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Char, useCharArray } from '../../lib/string';
 import classNames from 'classnames';
 import { WpsStats } from './WpsStats';
@@ -9,136 +9,106 @@ import { getIsPressedCapsLock, getLanguage } from '../../lib/keyboard';
 export const WordBoard = () => {
 	const [cursorPosition, setCursorPosition] = useState(0);
 	const [wpss, setWpss] = useState<number[]>([]);
-	const [_, setCount] = useState(0);
+	const [count, setCount] = useState(0);
 	const [wps, setWps] = useState(0);
 	const [info, setInfo] = useState<string[]>([]);
 
-	// const [cursor, setCursor] = useState<{ position: number }>({});
 	const [input, setInput] = useState('');
 	const { text, setText, getRandomText, setStatus } = useCharArray();
 	const { config } = useConfig();
+	const refInput = useRef<HTMLInputElement>(null);
 
-	const clearChar = () => {
-		if (config.errorStop) {
-			return;
-		}
+	const clearChar = useCallback(() => {
+		if (config.errorStop) return;
 
-		setCursorPosition(prev => {
+		setCursorPosition((prev) => {
 			if (prev > 0) {
 				setStatus(prev, 'default');
 				setStatus(prev - 1, 'current');
-				return --prev;
-			} else {
-				return prev;
+				return prev - 1;
 			}
+			return prev;
 		});
-	};
+	}, [config.errorStop, setStatus]);
 
-	useEffect(() => {
-		document.body.addEventListener('click', () => {
-			handleFocus();
-		});
-
-		document.body.addEventListener('keydown', (e: KeyboardEvent) => {
-			if (e.key == 'Backspace') {
-				clearChar();
-			}
-			setInfo(prev => {
-				prev[0] = getLanguage(e.key);
-				return prev;
-			});
-			if (getIsPressedCapsLock(e)) {
-				setInfo(prev => {
-					prev[1] = 'Caplock';
-					return prev;
-				});
-			} else {
-				setInfo(prev => {
-					prev[1] = '';
-					return prev;
-				});
-			}
-		});
-
-		const timer = setInterval(() => {
-			setCount(prev => {
-				setWps(prev * 10);
-				setWpss(preva => [...preva, prev * 10]);
-				return 0;
-			});
-		}, 1000);
-
-		return () => {
-			document.body.removeEventListener('click', () => {
-				handleFocus();
-			});
-			document.body.removeEventListener('keydown', () => {
-				clearChar();
-			});
-
-			clearInterval(timer);
-		};
+	const handleFocus = useCallback(() => {
+		refInput.current?.focus();
 	}, []);
 
-	const refInput = useRef<HTMLInputElement>(null);
-
 	const handleInput = (value: string) => {
-		if (config.errorStop) {
-			if (value == text[cursorPosition].char) {
-				setStatus(cursorPosition, 'succesefully');
-				setCursorPosition(prev => prev + 1);
-				setStatus(cursorPosition + 1, 'current');
+		const currentChar = text[cursorPosition];
+		if (!currentChar) return;
 
-				setCount(prev => prev + 1);
+		const isCorrect = value === currentChar.char;
 
-				if (cursorPosition == text.length - 1) {
-					setText(getRandomText());
+		if (isCorrect) setStatus(cursorPosition, 'succesefully');
+		else setStatus(cursorPosition, 'error');
 
-					setCursorPosition(0);
-				}
-			} else {
-				setStatus(cursorPosition, 'error');
-			}
-		} else {
-			if (value == text[cursorPosition].char) {
-				setStatus(cursorPosition, 'succesefully');
-			} else {
-				setStatus(cursorPosition, 'error');
-			}
-			setCursorPosition(prev => prev + 1);
-			setStatus(cursorPosition + 1, 'current');
+		if (config.errorStop && !isCorrect) return setInput('');
 
-			setCount(prev => prev + 1);
+		const nextPos = cursorPosition + 1;
+		setCursorPosition(nextPos);
+		setStatus(nextPos, 'current');
+		setCount((prev) => prev + 1);
 
-			if (cursorPosition == text.length - 1) {
-				setText(getRandomText());
-				setCursorPosition(0);
-			}
+		if (nextPos >= text.length) {
+			setText(getRandomText());
+			setCursorPosition(0);
 		}
 
 		setInput('');
 	};
 
-	const handleFocus = () => {
-		if (!refInput || refInput.current == null) {
-			return;
-		}
-		refInput.current.focus();
-	};
+	// Event listeners
+	useEffect(() => {
+		const handleClick = () => handleFocus();
+		const handleKeydown = (e: KeyboardEvent) => {
+			if (e.key === 'Backspace') clearChar();
 
-	const colorSet = (char: Char) => {
-		if (char.status == 'error') {
-			return 'bg-accent';
-		}
+			let lang = getLanguage(e.key);
+			if (lang === 'un') {
+				lang = info[0];
+			}
+			const caps = getIsPressedCapsLock(e) ? 'CapsLock' : '';
+			setInfo([lang, caps]);
+		};
 
-		if (char.status == 'current') {
-			return 'bg-primary';
-		}
+		document.body.addEventListener('click', handleClick);
+		document.body.addEventListener('keydown', handleKeydown);
 
-		if (char.status == 'succesefully') {
-			return 'bg-background';
-		}
-		return 'transparent';
+		return () => {
+			document.body.removeEventListener('click', handleClick);
+			document.body.removeEventListener('keydown', handleKeydown);
+		};
+	}, [clearChar, handleFocus]);
+
+	// WPS через requestAnimationFrame
+	const wpsFrame = useRef(0);
+	useEffect(() => {
+		let animationId: number;
+
+		const updateWps = () => {
+			if (wpsFrame.current > 1000) {
+				setWps(count * 10);
+				setWpss((prev) => [...prev, count * 10]);
+				setCount(0);
+				wpsFrame.current = 0;
+			} else {
+				wpsFrame.current += 1;
+			}
+			animationId = requestAnimationFrame(updateWps);
+		};
+
+		animationId = requestAnimationFrame(updateWps);
+		return () => cancelAnimationFrame(animationId);
+	}, [count]);
+
+	const colorMap: Record<Char['status'], string> = {
+		error: 'bg-accent',
+		current: 'bg-primary',
+		succesefully: 'bg-background',
+		default: 'transparent',
+		hide: 'hidden',
 	};
 
 	return (
@@ -148,10 +118,9 @@ export const WordBoard = () => {
 					<div
 						key={i}
 						className={classNames(
-							`	pb-[1px]`,
-							colorSet(char),
-							char.char == ' ' && 'h-[25px] w-[8px]',
-							char.status == 'hide' && 'hidden'
+							'pb-[1px]',
+							colorMap[char.status],
+							char.char === ' ' && 'h-[25px] w-[8px]'
 						)}
 					>
 						{char.char}
@@ -160,33 +129,30 @@ export const WordBoard = () => {
 				<input
 					className='opacity-0 outline-none bg-transparent absolute w-full top-0 left-0 z-[-1] max-w-full h-full'
 					value={input}
-					onChange={e => handleInput(e.target.value)}
+					onChange={(e) => handleInput(e.target.value)}
 					autoFocus
 					ref={refInput}
 				/>
 			</div>
 
-			<div className='bg-secondary  w-min  absolute top-0 translate-x-full right-0 p-1'>
+			<div className='bg-secondary w-min absolute top-0 translate-x-full right-0 p-1'>
 				<div className='min-w-[29px] flex justify-center items-center'>
 					{wps}
 				</div>
 				<ul className='min-w-[29px] flex-col flex justify-center items-center'>
-					{info.map(inf => (
-						<li>{inf}</li>
+					{info.map((inf, idx) => (
+						<li key={idx}>{inf}</li>
 					))}
 				</ul>
 			</div>
-			{/* <div className=' h-min  w-min flex justify-center items-center absolute top-0 -translate-x-full left-0 pr-1'>
-				<ConfigModal>
-					<Settings />
-				</ConfigModal>
-			</div> */}
-			<WpsStats
+
+			{/* <WpsStats
 				className='absolute -translate-y-full top-0 left-0'
 				wpss={wpss}
 				type={config.wpsStatsType}
 				count={config.wpsStatsCount}
-			/>
+			/> */}
+
 			{config.keyboardVisible && <Keyboard />}
 		</div>
 	);
